@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi"> <!-- Sửa thành lang="vi" -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên hệ - Mô phỏng Tìm kiếm nhị phân</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+    <!-- Nav -->
+    <nav class="container navigation">
+        <!-- Thêm logo hoặc tên trang web để nhất quán -->
+        <a href="./index.html" class="logo">BinarySearch Viz</a> 
+        <ul>
+            <li><a href="./index.html">Trang chủ</a></li>
+            <!-- Link đến phần mô phỏng trên trang chủ -->
+            <li><a href="./index.html#simulator">Mô phỏng</a></li> 
+            <!-- Link đến phần liên hệ trên trang này -->
+            <li><a href="./askAI.html">Đặt câu hỏi</a></li> 
+            <!-- Thêm class active để biết đang ở trang nào -->
+            <li><a href="./contact.html" class="active">Liên hệ</a></li> 
+        </ul>
+    </nav>
+    
+    <!-- Dùng thẻ <main> để bao bọc nội dung chính -->
+    <main>
+        <!-- Header -->
+        <header class="container header">
+            <h1>Thông tin liên hệ</h1>
+            <p>Mọi thắc mắc hoặc góp ý, vui lòng liên hệ với tôi qua các thông tin dưới đây.</p>
+        </header>
+
+        <!-- Section thông tin dự án -->
+        <section id="project-credits" class="container content-card">
+            <h2>Thành viên phát triển</h2>
+            <ul>
+                <li><strong>Ý tưởng & Phát triển chính:</strong> Nguyễn Thành Văn</li>
+                <li><strong>Thiết kế & Giao diện:</strong> Nguyễn Thành Văn</li>
+                <li><strong>Lập trình JavaScript:</strong> Nguyễn Thành Văn (Kiến trúc) & Hỗ trợ từ ChatGPT (Logic chi tiết)</li>
+                <li><strong>Kiểm thử (Testing):</strong> Nguyễn Thành Văn</li>
+                <li><strong>Công cụ hỗ trợ:</strong> Gemini API</li>
+            </ul>
+        </section>
+
+        <!-- Section thông tin liên hệ (Quan trọng nhất) -->
+        <section id="contact-info" class="container content-card">
+            <h2>Kênh liên lạc</h2>
+            <ul class="contact-list">
+                <li>
+                    <span>📧</span> <!-- Emoji thay cho icon -->
+                    <div>
+                        <strong>Email</strong>
+                        <!-- Đây là cách để click vào sẽ mở ứng dụng mail -->
+                        <a href="mailto:thanhvanpycoder@gmail.com">thanhvanpycoder@gmail.com</a> (Ưu tiên)
+                        <br>
+                        <a href="mailto:ntvana25033@cusc.ctu.edu.vn">ntvana25033@cusc.ctu.edu.vn</a> (Học tập)
+                    </div>
+                </li>
+                <li>
+                    <span>📞</span>
+                    <div>
+                        <strong>Điện thoại</strong>
+                        <!-- Click vào trên di động sẽ gợi ý gọi -->
+                        <a href="tel:0799898050">0799 898 050</a>
+                    </div>
+                </li>
+                 <li>
+                    <span>💻</span>
+                    <div>
+                        <strong>Mã nguồn (GitHub)</strong>
+                        <a href="https://github.com/your-username" target="_blank">Xem dự án trên GitHub</a>
+                    </div>
+                </li>
+            </ul>
+        </section>
+    </main>
+    
+    <!--Footer-->
+    <footer class="container footer">
+        <p>&copy; 2025 Nguyễn Thành Văn. All rights reserved.</p>
+    </footer>
+
+</body>
+
+</html>

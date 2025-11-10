@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Tìm kiếm nhị phân</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+    <!-- Nav -->
+    <nav class="container navigation">
+        <a href="./index.html" class="logo">BinarySearch Viz</a>
+        <ul>
+            <li><a href="./index.html" class="active">Trang chủ</a></li>
+            <li><a href="#simulator">Mô phỏng</a></li>
+            <li><a href="./askAI.html">Đặt câu hỏi</a></li>
+            <li><a href="./contact.html">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <!-- Header -->
+        <header class="container header">
+            <h1>Tìm kiếm nhị phân</h1>
+            <p>Trang web mô phỏng trực quan thuật toán tìm kiếm nhị phân.</p>
+        </header>
+
+        <!-- Simulator Section -->
+        <section id="simulator" class="container content-card">
+            <h2>Bảng điều khiển</h2>
+            
+            <!-- Input Form -->
+            <form action="#" class="input-form">
+                <div class="form-group">
+                    <label for="array">Nhập mảng (cách nhau bởi dấu phẩy):</label>
+                    <input type="text" name="array" id="array" placeholder="Ví dụ: 8, 2, 10, 4, 16, 5" required>
+                </div>
+                <div class="form-group">
+                    <label for="k">Nhập số cần tìm:</label>
+                    <input type="number" name="k" id="k" placeholder="Ví dụ: 10" required>
+                </div>
+                <div class="button-group">
+                    <input type="button" value="Bắt đầu" id="start" class="btn btn-primary">
+                    <input type="button" value="Bước tiếp" id="next" class="btn btn-secondary">
+                    <input type="button" value="Xóa" id="reset" class="btn btn-danger">
+                </div>
+            </form>
+            
+            <!-- Draw Area -->
+            <div id="draw-area" class="draw">
+                <!-- Vùng mô phỏng sẽ hiện ở đây -->
+            </div>
+            
+            <!-- Log Area -->
+            <div id="log-area" class="description">
+                <h2>Nhật ký các bước</h2>
+                <div id="log-output">
+                    <p>Chào mừng! Hãy nhập dữ liệu và nhấn "Bắt đầu".</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Algorithm Intro Section -->
+        <section id="algorithm-intro" class="container content-card">
+             <h2>Tìm kiếm nhị phân là gì?</h2>
+             <p>Tìm kiếm nhị phân (Binary Search) là một thuật toán tìm kiếm hiệu quả trên một danh sách <strong>đã được sắp xếp</strong>. Nguyên tắc hoạt động của nó là liên tục chia đôi không gian tìm kiếm, so sánh phần tử ở giữa với giá trị cần tìm và loại bỏ một nửa không gian tìm kiếm không chứa giá trị đó.</p>
+             <p><strong>Độ phức tạp:</strong> O(log n), nhanh hơn đáng kể so với tìm kiếm tuyến tính O(n).</p>
+        </section>
+    </main>
+
+    <!--Footer-->
+    <footer class="container footer">
+        <p>&copy; 2025 Nguyễn Thành Văn. All rights reserved.</p>
+    </footer>
+
+    <!-- !!! QUAN TRỌNG: CẬP NHẬT JAVASCRIPT !!! -->
+    <script>
+        const startBtn = document.getElementById("start");
+        const nextBtn = document.getElementById("next");
+        const resetBtn = document.getElementById("reset");
+        // Sửa các selector để trỏ đúng vào vùng mới
+        const drawDiv = document.getElementById("draw-area");
+        const logOutputDiv = document.getElementById("log-output"); // THAY ĐỔI TỪ .description
+
+        let arr = [];
+        let k = null;
+        let left, right, mid;
+        let stepActive = false;
+        let isFound = false;
+
+        // =============== RENDER CORE ===============
+
+        function renderGrid() {
+            let html = `<table class="simulation-table">`;
+            
+            // Dòng Index
+            html += `<tr><th>Index</th>`;
+            for(let i = 0; i < arr.length; i++) {
+                html += `<td>${i}</td>`;
+            }
+            html += `</tr>`;
+
+            // Dòng giá trị
+            html += `<tr><th>Value</th>`;
+            arr.forEach((value, i) => {
+                let className = 'cell';
+                if (i < left || i > right) {
+                    className += ' inactive';
+                } else if (i === mid) {
+                    className += ' mid';
+                    if(isFound) className += ' found';
+                }
+                html += `<td class="${className}">${value}</td>`;
+            });
+            html += `</tr>`;
+
+            // Dòng con trỏ
+            html += `<tr><th>Pointers</th>`;
+            for(let i = 0; i < arr.length; i++) {
+                let pointers = '';
+                if(i === left) pointers += 'L ';
+                if(i === right) pointers += 'R';
+                if(i === mid) pointers += ' M';
+                html += `<td class="pointer-cell">${pointers.trim()}</td>`;
+            }
+            html += `</tr>`;
+            
+            html += `</table>`;
+            drawDiv.innerHTML = html;
+        }
+
+        function logMessage(message, type = 'info') {
+            logOutputDiv.innerHTML += `<p class="log-${type}">${message}</p>`;
+            logOutputDiv.scrollTop = logOutputDiv.scrollHeight; // Tự cuộn xuống dưới
+        }
+
+        // =============== BINARY SEARCH ACTION ===============
+
+        startBtn.addEventListener("click", () => {
+            const rawInput = document.getElementById("array").value;
+            const kValue = document.getElementById("k").value;
+
+            if (!rawInput || kValue === "") {
+                alert("Vui lòng nhập đầy đủ dữ liệu!");
+                return;
+            }
+
+            arr = rawInput.split(",").map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+            if (arr.length > 15) {
+                alert("Mảng chỉ nên có tối đa 15 phần tử để hiển thị tốt nhất.");
+                arr = arr.slice(0, 15);
+            }
+            
+            arr.sort((a, b) => a - b);
+            k = Number(kValue);
+
+            left = 0;
+            right = arr.length - 1;
+            mid = -1;
+            stepActive = true;
+            isFound = false;
+
+            document.getElementById("array").value = arr.join(', ');
+            logOutputDiv.innerHTML = ""; // Xóa log cũ
+            logMessage(`Bắt đầu tìm kiếm giá trị <strong>${k}</strong> trong mảng: [${arr.join(', ')}]`);
+            renderGrid();
+        });
+
+        nextBtn.addEventListener("click", () => {
+            if (!stepActive) {
+                if (isFound) {
+                    logMessage(`Thuật toán đã kết thúc. Vui lòng nhấn "Xóa" để bắt đầu lại.`);
+                } else {
+                    alert("Hãy nhấn 'Bắt đầu' trước!");
+                }
+                return;
+            }
+
+            if (left > right) {
+                logMessage(`Không gian tìm kiếm trống (left > right). Không tìm thấy <strong>${k}</strong>.`, 'error');
+                stepActive = false;
+                mid = -1; // Reset mid để không highlight ô nào
+                renderGrid();
+                return;
+            }
+
+            mid = Math.floor((left + right) / 2);
+            logMessage(`<strong>Bước tiếp:</strong> left = ${left}, right = ${right}. Tính mid = floor((${left}+${right})/2) = ${mid}.`);
+            logMessage(`So sánh arr[${mid}] (giá trị ${arr[mid]}) với k (giá trị ${k}).`);
+
+            if (arr[mid] === k) {
+                isFound = true;
+                stepActive = false;
+                logMessage(`<b>✅ Tìm thấy ${k} tại vị trí index ${mid}!</b>`, 'success');
+            } else if (arr[mid] < k) {
+                logMessage(`arr[mid] (${arr[mid]}) < k (${k}). Bỏ qua nửa bên trái. Cập nhật <strong>left = mid + 1</strong> = ${mid + 1}.`);
+                left = mid + 1;
+            } else {
+                logMessage(`arr[mid] (${arr[mid]}) > k (${k}). Bỏ qua nửa bên phải. Cập nhật <strong>right = mid - 1</strong> = ${mid - 1}.`);
+                right = mid - 1;
+            }
+            renderGrid();
+        });
+
+        resetBtn.addEventListener("click", () => {
+            arr = [];
+            k = null;
+            stepActive = false;
+            isFound = false;
+            drawDiv.innerHTML = "";
+            logOutputDiv.innerHTML = `<p>Chào mừng! Hãy nhập dữ liệu và nhấn "Bắt đầu".</p>`;
+            document.getElementById("array").value = "";
+            document.getElementById("k").value = "";
+        });
+    </script>
+</body>
+</html>

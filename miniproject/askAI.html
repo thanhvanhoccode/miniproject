@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt câu hỏi với AI - Mô phỏng Tìm kiếm nhị phân</title>
+    <link rel="stylesheet" href="./styles.css">
+    <!-- Thư viện để chuyển đổi Markdown (văn bản thô từ AI) thành HTML đẹp mắt -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body>
+    <!-- === HỘP THOẠI ĐIỀU KHOẢN === -->
+    <div id="terms-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Điều khoản sử dụng tính năng AI</h2>
+            <p>Trước khi tiếp tục, vui lòng đọc và đồng ý với các điều khoản sau:</p>
+            <ul>
+                <li>Bạn sẽ sử dụng <strong>API Key Google Gemini của riêng bạn</strong>. Mọi chi phí phát sinh (nếu có)
+                    từ việc sử dụng API này là trách nhiệm của bạn.</li>
+                <li>Trang web này chỉ đóng vai trò là giao diện để gửi yêu cầu và không lưu trữ API Key của bạn. Key của
+                    bạn chỉ được gửi trực tiếp đến Google.</li>
+                <li>Không nhập thông tin nhạy cảm hoặc cá nhân vào ô câu hỏi.</li>
+            </ul>
+            <p>Bằng cách nhấn "Tôi đồng ý", bạn xác nhận đã đọc, hiểu và chấp nhận các điều khoản trên.</p>
+            <!-- === NÚT HÀNH ĐỘNG CỦA MODAL === -->
+            <div class="modal-buttons">
+                <button id="decline-button" class="btn btn-secondary">Từ chối (Quay về trang chủ)</button>
+                <button id="agree-button" class="btn btn-primary">Tôi đồng ý</button>
+            </div>
+        </div>
+    </div>
+    <!-- === KẾT THÚC HỘP THOẠI === -->
+    <!-- Nav -->
+    <nav class="container navigation">
+        <a href="./index.html" class="logo">BinarySearch Viz</a>
+        <ul>
+            <li><a href="./index.html">Trang chủ</a></li>
+            <li><a href="./index.html#simulator">Mô phỏng</a></li>
+            <!-- Thêm class active cho trang hiện tại -->
+            <li><a href="./askAI.html" class="active">Đặt câu hỏi</a></li>
+            <li><a href="./contact.html">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <!-- Header -->
+        <header class="container header">
+            <h1>Đặt câu hỏi với AI</h1>
+            <p>Sử dụng sức mạnh của Google Gemini để trả lời các thắc mắc của bạn về thuật toán.</p>
+        </header>
+
+        <!-- Main Content Card -->
+        <section id="ai-qa" class="container content-card">
+            <h2>Gửi yêu cầu đến Gemini 2.0 Flash</h2>
+
+            <div class="form-group">
+                <label for="api-key-input">API Key Gemini của bạn</label>
+                <input type="password" id="api-key-input" placeholder="Dán API Key của bạn vào đây">
+            </div>
+
+            <div class="form-group">
+                <label for="prompt-input">Câu hỏi của bạn</label>
+                <textarea id="prompt-input" placeholder="Ví dụ: Tìm kiếm nhị phân khác tìm kiếm tuyến tính ở điểm nào?"
+                    rows="5"></textarea>
+                <br>
+            </div>
+
+            <button id="send-button" class="btn btn-primary" style="width:100%;">Gửi câu hỏi</button>
+
+            <!-- Vùng hiển thị kết quả -->
+            <div id="response-container" class="ai-response">
+                <h3>Câu trả lời từ AI</h3>
+                <div class="loader" id="loader"></div>
+                <div id="ai-response-output">
+                    <p class="placeholder-text">Câu trả lời sẽ xuất hiện ở đây...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!--Footer-->
+    <footer class="container footer">
+        <p>&copy; 2025 Nguyễn Thành Văn. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // === LOGIC XỬ LÝ ĐIỀU KHOẢN ===
+        document.addEventListener('DOMContentLoaded', function () {
+            const termsModal = document.getElementById('terms-modal');
+            const agreeButton = document.getElementById('agree-button');
+            const declineButton = document.getElementById('decline-button');
+            const mainContent = document.querySelector('main');
+
+            // THAY ĐỔI Ở ĐÂY: Dùng sessionStorage thay vì localStorage
+            if (sessionStorage.getItem('geminiTermsAgreed') !== 'true') {
+                termsModal.style.display = 'flex';
+                mainContent.classList.add('content-locked');
+            } else {
+                termsModal.style.display = 'none';
+            }
+
+            agreeButton.addEventListener('click', function () {
+                termsModal.style.display = 'none';
+                mainContent.classList.remove('content-locked');
+                // THAY ĐỔI Ở ĐÂY: Dùng sessionStorage thay vì localStorage
+                sessionStorage.setItem('geminiTermsAgreed', 'true');
+            });
+
+            declineButton.addEventListener('click', function () {
+                window.location.href = './index.html';
+            });
+        });
+
+        // === LOGIC GỌI API GEMINI ===
+        const sendButton = document.getElementById('send-button');
+        const promptInput = document.getElementById('prompt-input');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const loader = document.getElementById('loader');
+        const responseOutput = document.getElementById('ai-response-output');
+
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=";
+
+        async function callGeminiAPI() {
+            // THAY ĐỔI Ở ĐÂY: Dùng sessionStorage thay vì localStorage
+            if (sessionStorage.getItem('geminiTermsAgreed') !== 'true') {
+                alert("Bạn phải đồng ý với điều khoản sử dụng trước khi gửi câu hỏi.");
+                return;
+            }
+
+            const apiKey = apiKeyInput.value.trim();
+            const promptText = promptInput.value.trim();
+
+            if (!apiKey) {
+                alert("Vui lòng nhập Gemini API key của bạn.");
+                return;
+            }
+            if (!promptText) {
+                alert("Vui lòng nhập câu hỏi của bạn.");
+                return;
+            }
+
+            loader.style.display = 'block';
+            sendButton.disabled = true;
+            sendButton.textContent = 'Đang xử lý...';
+            responseOutput.innerHTML = '<p class="placeholder-text">Đang chờ phản hồi từ AI...</p>';
+
+            try {
+                const requestBody = {
+                    "contents": [{
+                        "parts": [{ "text": promptText }]
+                    }]
+                };
+
+                const response = await fetch(API_URL + apiKey, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Lỗi HTTP ${response.status}: ${errorData.error.message}`);
+                }
+
+                const data = await response.json();
+                const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (responseText) {
+                    responseOutput.innerHTML = marked.parse(responseText);
+                } else {
+                    responseOutput.innerHTML = '<p class="error-text">Không thể trích xuất nội dung từ phản hồi của API. Vui lòng kiểm tra console để xem chi tiết.</p>';
+                    console.warn("Full API Response:", data);
+                }
+
+            } catch (error) {
+                console.error("❌ Đã xảy ra lỗi:", error);
+                responseOutput.innerHTML = `<p class="error-text"><strong>Đã xảy ra lỗi:</strong> ${error.message}. Vui lòng kiểm tra lại API Key và thử lại.</p>`;
+            } finally {
+                loader.style.display = 'none';
+                sendButton.disabled = false;
+                sendButton.textContent = 'Gửi câu hỏi';
+            }
+        }
+
+        sendButton.addEventListener('click', callGeminiAPI);
+    </script>
+</body>
+
+</html>
